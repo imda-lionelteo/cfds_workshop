@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myns
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dov-deploy
+  namespace: myns
+  labels:
+    app: dov
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dov
+      env: test
+  template:
+    metadata:
+      name: dov-pod
+      namespace: myns # if with this line, it will be needed to be run in this namespace. but if this line do not exist then can be on default
+      labels:
+        app: dov
+        env: test
+    spec:
+      containers:
+      - name: dov-container
+        image: chukmunnlee/dov-bear:v5
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - configMapRef:
+              name: dov-cm
+          - secretRef:
+              name: dov-cm
+        ports:
+        - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dov-svc
+  namespace: myns
+  labels:
+    app: dov
+spec:
+  type: ClusterIP
+  selector:
+    app: dov
+    env: test
+  ports:
+  - name: web
+    port: 8080
+    targetPort: 3000
