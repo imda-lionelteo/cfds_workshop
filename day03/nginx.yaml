@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-doploy
+  namespace: web
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      name: nginx-po
+  template:
+    metadata:
+      name: nginx-po
+      labels:
+        app: nginx
+        name: nginx-po
+    spec:
+      volumes: 
+      - name: data-vol 
+        emptyDir: {} 
+      - name: html-data
+        configMap: 
+          name: ingress-cm
+      - name: secrets 
+        secret:
+          secretName: ingress-secret
+      containers:
+      - name: nginx-container
+        image: nginx
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: data-vol
+          mountPath: /opt/data
+        - name: html-data
+          mountPath: /usr/share/nginx/html 
+          readOnly: true
+        - name: secrets
+          mountPath: /var/keys
+          readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+  namespace: web
+  labels:
+    app: nginx
+    name: nginx-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx
+    name: nginx-po
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80

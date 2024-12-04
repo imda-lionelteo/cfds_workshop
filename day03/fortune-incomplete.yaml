@@ -1,0 +1,11 @@
+---
+apiVersion: networkin.k8s.io/v1
+kind: Ingress
+metadata:
+  name: for-ing
+  namespace: fortune
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: fortune-104.248.99.181.nip.io
+    
